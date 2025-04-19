@@ -1,0 +1,156 @@
+---
+title: "Diseño Completamente al Azar (DCA)"
+author: "Ing. Agr. Juan Jose Caparicona Marca"
+date: "2025-04-05"
+output: html_document
+---
+
+------------------------------------------------------------------------
+
+# DCA {.tabset}
+
+## Modelo estadístico
+
+$$Y_{ij} = \mu + T_i + \varepsilon_{ij}$$
+
+**Donde:**
+
+$Y_i$ : Variable de respuesta de la ij-ésimo unidad experimental
+
+$\mu$ : Efecto de la media general.
+
+$T_i$ : Efecto de i-ésimo tratamiento
+
+$\varepsilon_i$ : Efecto del Error experimental a la ij-ésimo unidad experimental
+
+------------------------------------------------------------------------
+
+## Hipótesis
+
+Ho = $t = t$ (todos los tratamientos producen el mismo efecto)
+
+Ho = $t \neq t$ (al menos uno de los tratamientos produce efectos distintos)
+
+------------------------------------------------------------------------
+
+## Estimación de suma de cuadrados
+
+1.  Factor de correción (FC)
+
+$$FC = \frac{Y^2}{t\times r}$$
+
+2.  Suma de cuadrados de tratamientos (SCt)
+
+$$SCt = \frac{\sum_{i=1} ^ t Y_i ^ 2}{r} - FC$$
+
+3.  Suma de cuadrados totales (SCT)
+
+$$SCT = \sum_{i=1} ^ t \sum_{j=1}^r Y_{ij} - FC$$
+
+4.  Suma de cuadrados del error (SCE)
+
+$$SCE = SCT - SCt$$
+
+------------------------------------------------------------------------
+
+## Cuadro de analisis de varianza
+
+| Fuente de variación | Grados de libertad (gl) | Suma de cuadrados | Cuadrado Medio (CM) | f calculado |
+|:-------------:|:-------------:|:-------------:|:-------------:|:-------------:|
+| Tratamientos | $t-1$ | $SCt$ | $\frac{SCt}{gl_t}$ | $\frac{CM_{t}}{CM_e}$ |
+| Error | $t(r-1)$ | $SCE$ | $\frac{SCE}{gl_e}$ |  |
+| Total | $t \times r - 1$ | $SCT$ |  |  |
+
+: DCA
+
+Nivel de significancia
+
+Se puede trabajar con $\alpha = 0.05$ (5%) o $\alpha = 0.01$ (1%)
+
+Regla de decisión
+
+$$ft(gl_t, gl_E)$$ $$fc < ft : H_0$$
+
+$$fc \geq ft : H_1$$
+
+------------------------------------------------------------------------
+
+# AgroR
+
+Estadística experimental y gráficos para ciencias agricolas.
+
+1.  Instalar libreria: `install.packages('AgroR')`
+2.  Importar libreria: `library(AgroR)`
+
+------------------------------------------------------------------------
+
+Croquis
+
+```{r}
+library(AgroR)
+```
+```{r}
+tratamiento <- paste('T', 1:5)
+sketch(tratamiento, r = 5)
+```
+------------------------------------------------------------------------
+
+# **ANOVA DCA**
+
+```{r}
+getwd()
+setwd("D:/Proyectos RStudio/Diseños Experimentales Agronomia/Scripts/")
+```
+
+```{r}
+library(readxl)
+ruta <- "../datos/DCA_Palto.xlsx"
+palto <- read_excel(ruta, 
+                    sheet = 'Matriz',
+                    range = 'A1:AH16')
+attach(palto)
+DIC(Trat, nh1, mcomp = "duncan", ylab = "Número de hojas", xlab = "Tratamientos")
+```
+
+
+1.  *Importar desde excel*
+
+```{r}
+library(readxl)
+ruta <- "D:/Proyectos RStudio/Diseños Experimentales Agronomia/datos/T_28855_DCA_Yuca.xlsx"
+dca_yuca <- read_excel(ruta,              # Ruta absoluta al archivo .xlsx 
+                       sheet = 'Matriz',  # Hoja en la que estan los datos
+                       range = 'A1:I41')  # Rango de los datos
+View(dca_yuca) # Mostrar contenido de la variable
+```
+
+2.  *ANOVA*
+
+```{r}
+attach(dca_yuca)
+DIC(TRATAMIENTO,
+    `Altura(cm)`,
+    mcomp = 'duncan',
+    fill = 'trat',
+    ylab = 'Altura de planta (cm)',
+    xlab = 'Variedades de yuca',
+    geom = 'box')
+```
+
+------------------------------------------------------------------------
+
+**ANOVA DCA (Agricolae)**
+
+```{r}
+modelo <- aov(`Altura(cm)` ~ TRATAMIENTO, data = dca_yuca)
+anova_res <- summary(modelo)
+anova_df <- as.data.frame(anova_res[[1]])
+```
+
+*Imprimir tabla*
+
+| Fuente de variación | Grados de libertad (gl) | Suma de cuadrados | Cuadrado Medio (CM) | f calculado |
+|:-------------:|:-------------:|:-------------:|:-------------:|:-------------:|
+| Tratamientos | `r anova_df["TRATAMIENTO", "Df"]` | `r anova_df["TRATAMIENTO", "Sum Sq"]` | `r anova_df["TRATAMIENTO", "Mean Sq"]` | `r anova_df["TRATAMIENTO", "F value"]` |
+| Error | `r anova_df["Residuals", "Df"]` | `r anova_df["Residuals", "Sum Sq"]` | `r anova_df["Residuals", "Mean Sq"]` |  |
+| Total | `r anova_df["TRATAMIENTO", "Df"] + anova_df["Residuals", "Df"]` | `r anova_df["TRATAMIENTO", "Sum Sq"] + anova_df["Residuals", "Sum Sq"]` |  |  |
