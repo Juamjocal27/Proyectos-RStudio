@@ -5,7 +5,7 @@ date: "2025-04-19"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r echo=TRUE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
